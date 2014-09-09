@@ -1,0 +1,246 @@
+#----------------------------------------------------------------------------#
+#                                                                            #
+# pSQL is (c) 2001 Fionn Behrens <fi@nn.org> and may be distributed and used #
+#  freely under the licensing terms of the GNU Public License (www.fsf.org)  #
+#                                                                            #
+#   For further information, updates and documentation of pSQL check out :   #
+#                       http://software.fionet.com/pSQL/                     #
+#                                                                            #
+#   If you use this software in a project that is deployed in professional   #
+#  environments and/or on a large scale, you should feel obliged to send an  #
+# EMail to the author (see top for address), telling him about your project. #
+#          Donations are always welcome but, certainly, not required.        #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+                                  EXAMPLES
+
+Since I am not a friend of reading loads of source just to find out what some
+software does, I will try to give you a taste of what pSQL is able to do by
+documenting some examples.
+
+Let us assume that we have a database named myData which contains two tables:
+1) A table named "People", with the following columns:
+         "ID_Person", "First", "Last", "zID_Address_priv",
+         "zID_Address_business", "Birthday", "zID_Person_married"
+2) A table named "Address", with the following columns:
+         "ID_Address", "Street", "Code", "City", "Phone", "Mobile"
+
+The ID_ columns are integer indices. The zID_ columns are integers which refer
+to ID_ columns of other tables or record sets. So, zID_Address_priv refers to
+ID_Address in a data set of the Addresses table.
+
+|# python
+|>>> import pSQL
+|>>> md = pSQL.mySQL("localhost",db="myData")
+
+OR
+
+|# python
+|>>> import pSQL
+|>>> import MySQLdb
+|>>> connection = MySQLdb.connect("localhost",db="myData")
+|>>> md = pSQL.pSQL(connection, "myData")
+
+The advantage of the mySQL superclass is that it also takes care of 
+disconnects (connection timeouts) automatically and transparently.
+So you never have to worry whether your connections are still valid.
+
+Thats all we need to initialize a pSQL database object.
+Let's take a look at what we have:
+
+|>>> print md
+|<pSQL database 'myData' at 0x8228d28>
+|>>> p = md.People
+|>>> print p
+|<pSQL Table People of database 'myData' at '0x8202888'>
+|>>> p = md["People"]
+|>>> print p
+|<pSQL Table People of database 'myData' at '0x82b2648'>
+
+What you see here is, that in most cases, pSQL provides more than one way for
+you to get what you want. In most cases, you will want to use the more readable
+"md.People" but, if you want to iterate through all your tables, your choice
+will be the brackets:
+
+|>>> for table in md.keys():   # and YES: for table in md.tables() would work.
+|>>>   print md[table].keys()
+|["ID_Person", "First", "Last", "zID_Address_priv", "zID_Address_business", "Birthday", "zID_Person_married"]
+|["ID_Address", "Street", "Code", "City", "Phone", "Mobile"]
+
+There you have all columns from your tables.
+Now, let's get some data from them.
+
+|>>> res = p.Last["Behrens"]
+|>>> len(res)
+|2
+|>>> print res
+|[{"ID_Person": 23, "First": "Agnes", "Last": "Behrens", "zID_Address_priv": 91, "zID_Address_business": None, "Birthday": <DateTime object for '1976-09-16 00:00:00.00' at 8144ce8>, "zID_Person_married": 25}, {"ID_Person": 25, "First": "Fionn", "Last": "Behrens", "zID_Address_priv": 91, "zID_Address_business": 121, "Birthday": <DateTime object for '1970-01-01 00:00:00.00' at 814552a>, "zID_Person_married": 23}]
+
+Obviously, we have got a set of two results. Their first names are:
+
+|>>> res.column("First")
+|["Agnes", "Fionn"]
+
+But how do we get their address now? There are two ways:
+
+|>>> agnes = res[0]
+|>>> md.Address.ID_Address[agnes.zID_Address_priv]
+|[{"ID_Address": 91, "Street": "Gluckaufstrasse", "Code": "12345", "City": "Heidelberg", "Phone": "0611-12345678", "Mobile": None}]
+
+OR:
+
+|>>> p.x_ref(md.Address,"zID_Address_priv")
+|>>> fionn.Address
+|{"ID_Address": 91, "Street": "Gluckaufstrasse", "Code": "12345", "City": "Heidelberg", "Phone": "0611-12345678", "Mobile": None}
+
+This cross reference is so easy only because ID_Address is an SQL index
+field and it is the first one in this table. If there were multiple indices
+and we had to pick one, it would have looked like: 
+|>>> p.x_ref(md.Address, "zID_Address_priv", "ID_Address", "Home")
+but in this case, pSQL picked "ID_Address" automatically and used the table 
+name "Address" instead of "Home".
+
+Are Fionn and Agnes living in the same place?
+
+|>>> if fionn.Address == agnes.Address:
+|>>>   print "oh yeah"
+|oh yeah
+
+And how do we get to Fionn's business address comfortably? We use another cross
+reference but this time we need to choose a name other than the table name
+("Address") for it or our first cross reference will be deleted:
+
+|>>> p.x_ref(md.Address,"zID_Address_business", name="Business")
+|>>> fionn.Business
+|[{"ID_Address": 121, "Street": "Saddam Grove", "Code": "12345", "City": "Bagdad", "Phone": "0123-12345678", "Mobile": "0172-1234567"}]
+
+What is Fionn's business phone number?
+
+|>>> fionn.Business.Phone           # This way is nice to read
+|'0123-12345678'
+|>>> fionn.Business["Phone"]        # This way you can loop through all keys
+|'0123-12345678'
+|>>> fionn.Business[4]              # You can even get it like from a List!
+|'0123-12345678'
+
+Agnes got a new mobile. Her mobile number is now: 0172-9876543
+
+|>>> agnes.Address.Mobile = "0172-9876543"
+
+Yes! That's all you have to do to store her new mobile number in your database.
+Isn't that easy?
+
+But - as always, not everything is possible:
+
+|>>> agnes.Address = None
+|ValueError: cross references can not be replaced.
+
+Okay. Maybe two results is just too much, we want exactly one. We can always
+narrow our criteria, for example by using the above result set called 'res':
+
+|>>> res.First["Fi%"]
+|[{"ID_Person": 25, "First": "Fionn", "Last": "Behrens", "zID_Address_priv": 91, "zID_Address_business": 121, "Birthday": <DateTime object for '1970-01-01 00:00:00.00' at 814552a>, "zID_Person_married": 23}]
+
+Now we have all data sets from Persons whose "Last" name is "Behrens" and "First"
+name begins with "Fi". Thats me. 
+If we had known both conditions in the first place, we could have skipped the
+first step ('res') and use this way, which is executing faster:
+
+|>>> md.People.select({"Last": "Behrens", "First": "Fi%"})
+|[{"ID_Person": 25, "First": "Fionn", "Last": "Behrens", "zID_Address_priv": 91, "zID_Address_business": 121, "Birthday": <DateTime object for '1970-01-01 00:00:00.00' at 814552a>, "zID_Person_married": 23}]
+
+How many people are in our database that begin with "B" or where born before
+Fionn? I will show different approaches.
+
+|>>> len(md.People.Last["B%"].Birthday[fionn.Birthday,"OR","<"])
+|34
+|>>> len(md.People.Last["B%"] + md.People.sql_select("Birthday < '1970-01-01'"))
+|34
+|>>> len(md.People.sql_select("Name LIKE 'B%' OR Birthday < '1970-01-01'"))
+|34
+
+The latter solution is less "pythonesque" but will execute faster and allows 
+for additional bonuses like e.g. ORDER BY statements:
+
+|>>> md.People.sql_select("Birthday < '1970-01-01' ORDER BY Last")
+
+...will give you all people in the database born before 1970 and sorted by
+their last name in the usual array of dictionaries.
+Sure, you could always
+
+|>>> old = md.People.sql_select("Birthday < '1970-01-01'", sort="Last")
+
+OR
+
+|>>> old = md.People.Birthday[fionn.Birthday,None,"<"]
+
+and then
+
+|>>> old.sort("Last")
+
+But that latter way will execute more slowly.
+
+Ok, one more thing: I want my aunt in the database. What do I have to do?
+
+|>>> auntaddr = { "Street": "Columbus Ave", "Code": "33333", "City": "N.Y.",
+|...              "Phone": "0516-12345678", "Mobile": None }
+|>>> adr_id = md.Address.insert(auntaddr)    # append() would work the same way...
+|>>> md.People.insert({"First": "Uta", "Last": "Taylor",
+|...                   "zID_Address_priv": adr_id, "Birthday": "1952-08-30"})
+
+That's it. Data we don't have can be left out right away. In your programming
+projects you should always use DateTime objects for date fields to maintain
+data comparison consistency but here I just took a string.
+
+Want to know how long the "First" name may be in the database?
+|>>> len(p.First)
+|30
+
+Now, let's assume my aunt suddenly dies. I want her off my database again.
+
+|>>> aunt = p.select({"Last":"Taylor", "First":"Uta"})
+|>>> len(aunt)        # Lets check the number of results
+|1
+|>>> aunt = aunt[0]   # We got only one result: Aunt Uta
+|>>> md.Addresses.ID_Address[aunt.zID_Address_priv][0].delete()
+|>>> aunt.delete()
+
+The delete() method will not only delete the SQL record from your database
+but will also remove the result object from the result set in which it came.
+
+If you only want to remove results from a result set WITHOUT deleting data
+from your database, you can do so by using e.g. 
+
+|>>> len(res)
+|2
+|>>> del res[0]
+|>>> len(res)
+|1
+
+Another possibility:
+Do you remember our cross reference we made above? We can use it to delete
+my aunt's data from both tables in one flush!
+
+|>>> p.select({"Last":"Taylor", "First":"Uta"})[0].delete(recurse=1)
+
+This tells the delete method to look for cross referenced data and delete
+it as well (but data which might be cross referenced from that cross referenced
+data will NOT be deleted, because we set the recursion level to 1 only).
+
+Actually, pSQL checks first if there are other entries in the "People"
+table using the referenced address record. If so, it wont be deleted even
+in recursive mode. This will not save you from having references in some other
+table that pSQL does not know of, so be VERY careful with recursive deletion
+of your data!! As always.
+
+
+
+I hope you enjoyed our little walk into the possibilities of data access with
+pSQL and encourage you to go and try yourself. There are a lot of things left
+that have not been shown here, but I tried my best to always let pSQL act like
+you would expect it to.
+
+Happy data mining!
+
+                    Fionn

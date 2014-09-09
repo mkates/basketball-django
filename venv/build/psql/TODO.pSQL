@@ -1,0 +1,89 @@
+#----------------------------------------------------------------------------#
+#                                                                            #
+# pSQL is (c) 2001 Fionn Behrens <fi@nn.org> and may be distributed and used #
+#  freely under the licensing terms of the GNU Public License (www.fsf.org)  #
+#                                                                            #
+#   For further information, updates and documentation of pSQL check out :   #
+#                       http://software.fionet.com/pSQL/                     #
+#                                                                            #
+#   If you use this software in a project that is deployed in professional   #
+#  environments and/or on a large scale, you should feel obliged to send an  #
+# EMail to the author (see top for address), telling him about your project. #
+#          Donations are always welcome but, certainly, not required.        #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+                                   TO DO:
+
+[x] overload /usr/lib/pymodules/python2.6/MySQLdb/times.py for current
+    python versions so that mx.DateTime keeps getting used
+
+[ ]   Do not insert '' for empty fields on insert statements but a NULL value
+      instead.
+
+[ ]   Make Fetcher into two classes - a Fetcher and a Storage class to avoid
+      possibly unexpected behaviour with Fetcher objects that change their
+      state and create each other. Will also reduce memory usage.
+
+[ ]   hide private methods from dir(). Would anyone tell me if and how that
+      can be done, please?
+      Ann.: 2.1 seems to solve this. Fix may follow later
+
+[ ]   handle NULL values properly (translate "None" to NULL instead of ''). 
+      Is not as easy as it sounds, though! Do I want that?
+
+[ ]   find a way to get the database name automatically so it does no longer
+      have to be supplied when the pSQL object is created. Hints welcome.
+
+[ ]   table creation (not yet implemented)
+      table deletion will not be implementet unless heavily requested. deleting
+      tables is a task that should be left to administrative tools, imho.
+      Ann: if you dont want to use MySQLdb directly for whatever reason
+           there is a way to create tables: provided you have a pSQL
+           database object named 'mydb' and want to have a new table
+           named 'mytable' in it, use 
+           mydb.sql_query("CREATE TABLE 'mytable' (field1 int(2), ...
+           in the usual MySQL fashion.
+
+[-]   create a database abstraction layer so that pSQL does not only work
+      with MySQLdb but at least postgres as well. This should be not too hard.
+      Suggestions and hints are welcome.
+      Ann: done for mySQL now.
+
+[X]   upgrade to python 2.x. 1.5.2 compatibility will probably go away soon
+      after and speed will hopefully increase.
+
+[ ]   Use python logical operators like 'and', 'or' and '==' for even more
+      intuitive creation of queries. I have seen this with SQLbuilder and
+      liked it a lot. How does this look?:
+      >>> result = db.People.Name == "Christine" and db.People.Age > "30"
+
+[ ]   introduce "late fetching"? At the moment, selecting large amounts of data
+      can result in considerable delays while the engine converts the data into
+      python structures. This effect could be countered by "late fetching" of
+      data which always only fetches (and then caches) data when it is really
+      demanded by the application. Overall performance will probably slightly
+      decrease with late fetching but pSQL will always act "responsive" and 
+      without any noticeable delays.
+      Example: We want all people whose names begin with "B" and who are
+               30 years old:
+      |>>> mydata.Name["B%"].Age[30]
+      To achieve this, the pSQL engine takes two steps (for technical reasons):
+      It first creates a result set of all people whose names begin with "B".
+      Depending on your particular case, this could be a lot of data, even if
+      you dont need it at all. It can take some seconds even on a fast machine
+      because data conversion seems to be O(n>>1) or so, even O(n²) when no
+      index column is present in the table.
+      Then, that result set is given the additional clause ".Age[30]" and it
+      issues another query combining the two conditions.
+      Result: pSQL probably fetches a lot of data that was never demanded or
+              needed. Sure, by using more sensible querying mechanisms like
+              |>>> mydata.select({"Name":"B%", "Age": 30})
+              this could easily be avoided, but with late fetching, there
+              would be almost no performance penalty even with the first
+              version, which - despite its clumsiness - may come in handy e.g.
+              for creating statements in a loop.
+
+[-]   make python types (pSQLTableType, pSQLResultType etc). Would anyone
+      please tell me how?
+      Ann: Partially resolved with my discovery of isinstance() ;-)

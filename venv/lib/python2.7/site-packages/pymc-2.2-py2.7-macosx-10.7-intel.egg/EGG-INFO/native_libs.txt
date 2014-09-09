@@ -1,0 +1,7 @@
+pymc/Container_values.so
+pymc/flib.so
+pymc/LazyFunction.so
+pymc/gp/incomplete_chol.so
+pymc/gp/linalg_utils.so
+pymc/gp/cov_funs/distances.so
+pymc/gp/cov_funs/isotropic_cov_funs.so

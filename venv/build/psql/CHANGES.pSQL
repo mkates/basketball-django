@@ -1,0 +1,144 @@
+
+1.2.1
+ - bugfix release
+
+1.2.0
+ - added mysql superclass wrapper with auto-reconnect
+
+1.1.0
+ - overloading the time conversion method in MySQLdb with mxdatetime properly
+
+1.0.0
+ - bugfix: updating virtual columns always resulted in an exception
+ - added refresh() method to result sets. So you can easily stay up
+   to date with result sets that you already have.
+
+0.9.9
+ - bugfix: another bug with multi-target xrefs, this time in recursive deletion
+ - added replicate() method. It allows you to replicate the contents of a
+   database result object into a new table or into a different data set in the
+   same table while conveniently adding or changing data at the same time.
+
+0.9.8
+ - bugfix: recursive deletion crashed with multi-target xrefs
+ - bugfix: MySQLdb API change worked around
+
+0.9.7:
+ - added index() method for result sets
+
+0.9.6:
+ - bugfix in cross referencing code
+ - optimization for len() calls
+
+0.9.5:
+ - Added "sort" option to select() method, so it is possible to issue
+   ORDER BY calls without leaving python ground.
+ - some compatibility fixes
+
+0.9.4:
+ - Added various new methods (e.g. __iter__()) to enhance the user experience
+   when using pSQL with python 2.3 and above
+ - The insert() method does now return the index of the freshly inserted 
+   column. (At least if that table happens to have an index...)
+ - License changed to GPL V2
+ - Added functionality to reduce the number of columns to be queried in a
+   table, thanks to a suggestion by Bernhard Reiter. You can use the method
+   table.use_columns(<column_list>) to define a set of column names or
+   table.ignore_column(<column_name>) to just remove a single column from
+   the list of used columns. Please note that NO actual data (columns) will
+   be removed from your database - they will just be ignored by that table
+   object.
+ - Added an update() method to the result object. This way you can update
+   an entire row with just one call. 
+   Use it like this: paul = drinkers.select({"Name": "Paul", "Age":20})[0]
+                     paul.update({"Age": 21, "Beers": 999})
+
+0.9.3:
+ - fixed another problem with inserting binary data.
+ - compiling more accurate SQL queries now. Please note that pSQL now uses
+   LIKE syntax automatically if there is a '%' in your expression. If you
+   want to match a '%' exactly you will have to use table.sql_select().
+ - compiling more failsafe SQL queries now.
+ - the speed of most queries should have significantly improved
+
+0.9.2:
+ - fixed pSQL to continue functioning with mySQLdb 0.9.2 and up which
+   had its internal character escaping routine moved.
+ - added pop() method for result sets
+ - added new option to x_ref: multi
+   When you set an x_ref with multi=2 you will get back a result array
+   for your reference and no exception if the reference hits zero or
+   more than one data set.
+   With multi=0 you will get "None" instead of an exception for a
+   dangling cross reference.
+   multi=1 is the default. It behaves like always.
+ - Added quoting for table names. This bug was here for more than 2
+   years and nobody sent a report! Maybe you all just use simple tables.
+
+0.9.1:
+ - internal data conversion now several times faster.
+ - no more problems writing binary data!
+    -> f = open("core")
+       mydatabase.mytable.File = f.read() # thats all to get your file in!
+ - sub("regsub.gsub", "re.sub") and a number of other small fixes.
+   Really 'cool things' will have to wait for summer to happen. Sorry.
+   This version has not been tested with 1.5.2 any longer but it might
+   still work.
+
+0.9.0:
+ - DateTime import statement changed to mx.DateTime
+ - preliminary support for python versions 2.0 and above. This is far from
+   being complete! Expect cool things this spring!
+   This version has not been tested with 1.5.2 any longer but it should
+   still work.
+
+0.8.9:
+ - bugfix: wrong identifier used in result object setitem call.
+
+   0.8.9 IS THE LAST pSQL version guaranteed to work with python 1.5.2
+
+0.8.8:
+
+ - FIXED PYTHON 1.5.2 BUILTIN str() to leave out the dreaded "L" for long() !!
+   The patch is applied automatically when the module is being loaded.
+   Through its nature, this fix is global to the scope of the interpreter and
+   could break other 1.5.2 software. On the other hand, the fixed str() now
+   works like the str() of all other python versions which should be ok.
+   If you dont want it, comment out the marked line at the very beginning of
+   pSQL.py
+ - fixed a bug that could lead to false results for concatenated queries
+ - fixed problems with updating of strings that contained "'" or '"'.
+ - fixed a bug that occured when iterating through concatenated result objects
+ - introduced virtual columns for result objects, suitable to attach random
+   data to a result object (e.g. related data sets from othe tables to be used
+   for further computation). Virtual columns are attached on a per-object basis
+   only, as opposed to cross references which are table-wide.
+   The methods to be used are setVirtual(name, data) and delVirtual(name).
+   Retrieval an manipulation of virtual columns is the same as with standard
+   columns in the result object. They are not shown by repr(). Take them as
+   a kind of 'sticky notes' for result objects.
+ - added reverse() method for result set objects. To sort some result by some
+   number in descending order just use res.sort("colname"); res.reverse()
+ - added has_key() method to result objects. (why did I forget that?)
+ - keys() and has_keys() now refer to all data items of a result object,
+   including cross references and virtual columns
+ - column() generates result set objects for columns that contain result objects
+   (e.g. cross references or virtuals)
+ - sort() can sort cross references and virtuals as well, now. You can even
+   sort by columns of the cross referenced data! Cool, eh?
+ - because the keys() methods report additional keys, the values() method of the
+   result object now returns the respective values.
+ - to query just the column names without cross references use the new methods
+   in the table and result object: columns() and has_column(name)
+ - to query just the values of the database row represented by a result object
+   without additional cross refs or virtuals, use the row() method.
+
+0.8.7:
+
+ - fixed updating of float() values which could raise unwanted exceptions
+ - added comparison methods for result set-, table- and database objects
+ - added append() method to the result set object (aka 'res1.append(res2)')
+ - added a valid __setitem__ operation to result set objects
+ - added a valid __add__ operation to result set objects (aka 'res1 + res2')
+ - added result object slicing (aka 'resobj[2:4]')
+

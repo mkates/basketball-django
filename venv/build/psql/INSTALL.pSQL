@@ -1,0 +1,24 @@
+#----------------------------------------------------------------------------#
+#                                                                            #
+# pSQL is (c) 2001 Fionn Behrens <fi@nn.org> and may be distributed and used #
+#  freely under the licensing terms of the GNU Public License (www.fsf.org)  #
+#                                                                            #
+#   For further information, updates and documentation of pSQL check out :   #
+#                       http://software.fionet.com/pSQL/
+#                                                                            #
+#   If you use this software in a project that is deployed in professional   #
+#  environments and/or on a large scale, you should feel obliged to send an  #
+# EMail to the author (see top for address), telling him about your project. #
+#         Donations are always welcome but, certainly, not required.         #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+                                  INSTALLATION
+
+Copy the file pSQL.py into your python path, e.g. /usr/lib/python/site-packages
+or /usr/local/lib/python/site-packages
+
+Copy all documentation to /usr/share/doc/pSQL or a similar location where you
+are used to find your docs.
+
+Thats all!

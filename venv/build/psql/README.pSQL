@@ -1,0 +1,175 @@
+#----------------------------------------------------------------------------#
+#                                                                            #
+# pSQL is (c) 2001 Fionn Behrens <fi@nn.org> and may be distributed and used #
+# freely under the licensing terms of the GNU Public License v2 (www.fsf.org)#
+#                                                                            #
+#   For further information, updates and documentation of pSQL check out :   #
+#                       http://software.fionet.com/pSQL/                     #
+#                                                                            #
+#   If you use this software in a project that is deployed in professional   #
+#  environments and/or on a large scale, you should feel obliged to send an  #
+# EMail to the author (see top for address), telling him about your project. #
+#          Donations are always welcome but, certainly, not required.        #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+This file has been written for pSQL version 0.8.6
+updated 2001-10-18 pSQL 0.8.7
+updated 2001-11-18 pSQL 0.8.8
+updated 2002-01-14 pSQL 0.9.0
+updated 2002-04-29 pSQL 0.9.1
+updated 2003-09-11 pSQL 0.9.4
+updated 2012-07-18 pSQL 1.2.0
+
+ABSTRACT:
+
+* Are you using a (My)SQL database all day in your programming projects and
+  dont want to write SQL statements again and again all over?
+
+* Would you like to use an SQL database in your project without needing to
+  know much about SQL?
+
+* You do not want to worry about SQL injection in your web projects?
+
+* Interested in making your database access sources a bit more readable and
+  easier to grok for other programmers?
+
+If you can answer YES to one or more of these, pSQL might be of interest to you.
+
+
+
+WHAT IT DOES:
+
+Basically, pSQL wraps all database access and all data you get from your
+database into some easy-to-handle and easily usable objects that "feel"
+like standard python data structures.
+So, if you have a pSQL database object called "myDB" with a table called
+Address, you can find all people in that table who are living in Oklahoma
+by issuing a command like:
+|>>> res = myDB.Address.City["Oklahoma%"]
+|>>> len(res)
+|2
+To find out the phone numbers of those two, you can use e.g.:
+|>>> res.column("Phone")
+|['0405-12345', '0405-67890']
+or:
+|>>> for r in res:
+|...   print "%s: %s"%(r.Name, r.Phone)
+|John Doe: 0405-12345
+|Joe User: 0405-67890
+
+
+REQUIREMENTS:
+
+pSQL was originally developed using python1.5.2 and MySQLdb. Therefor it
+should work with most python versions except maybe some very old installations.
+See the section "caveats" for information about which pSQL version goes best
+with which version of python.
+
+pSQL uses mxDateTime
+
+
+STABILITY:
+
+pSQL has been and is being developed in the course of several moderately,
+sometimes heavily used web projects, mostly based on python server pages.
+These projects are running pretty stable so far. There are no known bugs
+at the moment of this release.
+(See "known issues" below)
+
+
+STATUS: productivity
+
+
+DOCUMENTATION:
+
+Like most programmers, I dont feel like writing docs very much. However,
+ALL public methods inside the pSQL classes are fitted with extensive
+documentation strings.
+So - if you want to know what you can do with a pSQL Table object, just
+go to shell and type:
+
+|# python
+|>>> import pSQL
+|>>> print pSQL.Table.__doc__
+|Instances of this class represent database tables. Dont use directly.
+|     This object implements the following methods: insert, select, has_key
+|     keys, get_table. To retrieve a subset of data from this table use it like:
+|     table.colname['regex']. Example: addresses.Name["Fionn%"] will give you
+|     a set of all rows in the 'addresses' table that have 'Name' columns which
+|     begin with 'Fionn'. Alternatively: addresses['Name']['Fionn%']
+
+Or just read the source, Luke.
+
+
+EXAMPLES:
+
+Please read the EXAMPLES file for quite a number of examples
+on how pSQL can be used.
+
+
+KNOWN ISSUES AND CAVEATS:
+
+* pSQL should work with python1.5.2 and above. I have switched to 2.1 recently
+  and versions greater than 0.9.0 will probably no longer function as expected
+  under python versions <2.0. If you use python 2.3 or above you should at
+  least get pSQL 0.9.4 or above.
+  It is TOTALLY untested with python3
+
+* Handling of NULL values with pSQL is hard, if possible at all.
+  Do not use NULL.
+
+* Using tables with no index columns is generally not recommendable (this
+  applies not only to the pSQL context). It results in major performance
+  penalties because pSQL must check for identical rows in each result to keep 
+  its operations consistent.
+
+* The MySQLdb engine used for development of pSQL seems to convert all number
+  formats to python LongType variables. When converting such a variable to
+  a string, python1.5.2 always appends an "L" to it, e.g. str(long(1234))
+  results in '1234L'.
+  By default, pSQL PATCHES the python 1.5.2 str() method to NOT append "L"s.
+  If you encounter problems with that, please see the top of the pSQL.py file
+  for instructions to disable the patch.
+  As of version 0.8.8 pSQL functions ok without the patch. From version 0.8.9
+  or 0.9.0, this will probably no longer be true because the necessary checks
+  use up too much time.
+
+* If you plan on using 'date' fields in your database, always use the plain
+  MySQL datetime field type. I can promise proper operation only for this type.
+
+* Try to select data sensibly. For result sets up to about 100 rows you will
+  probably not notice anything. Very large data sets can cause considerable
+  delay and CPU load, though. See my note about having indices above.
+
+
+SUPPORT:
+
+There is no support. I have no time. I promise nothing. ;-)
+If you want or need paid support contact me at psql@software.fionet.com
+If the word "psql" (case irrelevant) does not appear in the Subject line,
+your mail will be discarded immediately and automatically.
+
+
+BUGS:
+
+Please report bugs to psql-bugs[at]software.fionet.com
+If the word "psql" (case irrelevant) does not appear in the Subject line,
+your mail will be discarded immediately and automatically.
+
+
+DONATIONS:
+
+If - in a sick motion ;-) - you should ever feel like contributing you can
+always go to www.paypal.com and donate a buck or two to
+pSQL-donations@spamfilter.de.
+
+
+THANKS:
+
+I would like to thank my one and only Agnieszka for her never ending support
+and Heinz Mauelshagen (of LVM) for being the nicest and most helpful person I
+ever met in the OSS community.
+Thanks to all people who contributed to the making of Webware, a really cool
+tool for dynamic web development in python and to GvR for python itself.
+Greetings to SFX, Peti, B&O and Judith who always is so far and so near.
